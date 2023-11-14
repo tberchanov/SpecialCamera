@@ -14,12 +14,15 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -49,6 +52,7 @@ public class CameraFragment extends Fragment {
 
     private AutoFitTextureView previewTextureView;
     private TextureView lensTextureView;
+    private TextView fpsTextView;
 
     private MediaProjectionManager projectionManager;
 
@@ -58,6 +62,8 @@ public class CameraFragment extends Fragment {
     private MediaProjectionService mediaProjectionService;
 
     private boolean isScreenCapturingOngoing = false;
+
+    private int framesQuantity = 0;
 
     private final ServiceConnection connection = new ServiceConnection() {
 
@@ -95,14 +101,27 @@ public class CameraFragment extends Fragment {
 
         previewTextureView = view.findViewById(R.id.preview_texture_view);
         lensTextureView = view.findViewById(R.id.lens_texture_view);
+        fpsTextView = view.findViewById(R.id.fps_text_view);
 
         // TODO width and height should be configurable based on the CameraDevice characteristics
         previewTextureView.setAspectRatio(1920, 1080);
 
-        cameraHelper = new CameraHelper(requireContext(), myCameras[0], previewTextureView, lensTextureView, this::onSurfaceTextureAvailable);
+        cameraHelper = new CameraHelper(requireContext(), myCameras[0], previewTextureView,
+                lensTextureView, this::onSurfaceTextureAvailable,
+                () -> framesQuantity++
+        );
         cameraHelper.openCamera();
 
         setupListeners(view);
+
+        view.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                fpsTextView.setText(Integer.toString(framesQuantity));
+                framesQuantity = 0;
+                view.postDelayed(this, 1000);
+            }
+        }, 1000);
     }
 
     private void setupListeners(@NonNull View view) {
@@ -132,6 +151,9 @@ public class CameraFragment extends Fragment {
                     startActivityForResult(projectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
                 }
             }
+        });
+        view.findViewById(R.id.change_fps_btn).setOnClickListener((v) -> {
+            cameraHelper.setFPS(new Range<>(0, 15));
         });
     }
 

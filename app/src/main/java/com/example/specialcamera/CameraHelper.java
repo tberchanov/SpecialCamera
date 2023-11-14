@@ -62,6 +62,9 @@ public class CameraHelper {
     @Nullable
     private Float exposure = 0f;
 
+    @NonNull
+    private final Runnable onPreviewFrameUpdate;
+
     private final CameraDevice.StateCallback mCameraCallback = new CameraDevice.StateCallback() {
 
         @Override
@@ -89,8 +92,10 @@ public class CameraHelper {
     public CameraHelper(
             @NonNull Context context, @NonNull String cameraID,
             @NonNull TextureView previewView, @NonNull TextureView lensView,
-            @NonNull Runnable onSurfaceTextureAvailable
+            @NonNull Runnable onSurfaceTextureAvailable,
+            @NonNull Runnable onPreviewFrameUpdate
     ) {
+        this.onPreviewFrameUpdate = onPreviewFrameUpdate;
         this.context = context;
         mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
         mCameraID = cameraID;
@@ -119,7 +124,8 @@ public class CameraHelper {
                         startCameraPreviewCapturing(previewSurfaceTexture, lensSurfaceTexture);
                     }
                 }),
-                () -> previewSurfaceTexture = null
+                () -> previewSurfaceTexture = null,
+                onPreviewFrameUpdate
         );
 
         retrieveSurfaceTexture(
@@ -131,11 +137,14 @@ public class CameraHelper {
                         startCameraPreviewCapturing(previewSurfaceTexture, lensSurfaceTexture);
                     }
                 }),
-                () -> lensSurfaceTexture = null
+                () -> lensSurfaceTexture = null,
+                () -> {
+                }
         );
     }
 
-    private void retrieveSurfaceTexture(@NonNull TextureView textureView, @NonNull SurfaceTextureConsumer onResult, @NonNull Runnable onDestroy) {
+    private void retrieveSurfaceTexture(@NonNull TextureView textureView, @NonNull SurfaceTextureConsumer onResult,
+                                        @NonNull Runnable onDestroy, @NonNull Runnable onUpdate) {
         if (textureView.isAvailable()) {
             onResult.consume(textureView.getSurfaceTexture());
         } else {
@@ -158,7 +167,7 @@ public class CameraHelper {
 
                 @Override
                 public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
-
+                    onUpdate.run();
                 }
             });
         }
@@ -331,6 +340,15 @@ public class CameraHelper {
 
         this.exposure = exposure;
 
+        try {
+            mCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "setISO: ", e);
+        }
+    }
+
+    public void setFPS(Range<Integer> fpsRange) {
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange);
         try {
             mCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
         } catch (CameraAccessException e) {
