@@ -140,17 +140,22 @@ public class CameraFragment extends Fragment {
             cameraHelper.setExposure(cameraHelper.getExposure() == null ? 0 : cameraHelper.getExposure() + 0.1f);
         });
         view.findViewById(R.id.record_btn).setOnClickListener((v) -> {
-            if (isScreenCapturingOngoing) {
-                mediaProjectionService.stopRecording();
-                isScreenCapturingOngoing = false;
-            } else {
-                if (isMediaProjectionServiceBound) {
-                    mediaProjectionService.startRecording();
-                    isScreenCapturingOngoing = true;
-                } else {
-                    startActivityForResult(projectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
-                }
-            }
+            new Thread(() -> {
+                ViewRecorder recorder = new ViewRecorder(30);
+                recorder.record(view);
+            }).start();
+
+//            if (isScreenCapturingOngoing) {
+//                mediaProjectionService.stopRecording();
+//                isScreenCapturingOngoing = false;
+//            } else {
+//                if (isMediaProjectionServiceBound) {
+//                    mediaProjectionService.startRecording();
+//                    isScreenCapturingOngoing = true;
+//                } else {
+//                    startActivityForResult(projectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+//                }
+//            }
         });
         view.findViewById(R.id.change_fps_btn).setOnClickListener((v) -> {
             cameraHelper.setFPS(new Range<>(0, 15));

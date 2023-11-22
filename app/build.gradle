@@ -26,9 +26,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    packagingOptions {
+        exclude 'META-INF/native-image/**'
+    }
 }
 
 dependencies {
+    implementation group: 'org.bytedeco', name: 'javacv-platform', version: '1.5.9'
     implementation("androidx.core:core:1.12.0")
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
