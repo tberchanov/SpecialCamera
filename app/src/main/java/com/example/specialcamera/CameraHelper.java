@@ -2,6 +2,8 @@ package com.example.specialcamera;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -182,6 +184,13 @@ public class CameraHelper {
         previewSurfaceTexture.setDefaultBufferSize(1920, 1080);
 
         Surface surface = new Surface(previewSurfaceTexture);
+
+//        Canvas canvas =surface.lockCanvas(null);
+//        Paint paint = new Paint();
+//        paint.setColor(0xFF0000);
+//        canvas.drawCircle(50, 50, 50, paint);
+//        surface.unlockCanvasAndPost(canvas);
+
         Surface lensSurface = new Surface(lensSurfaceTexture);
 
         try {
